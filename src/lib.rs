@@ -1,7 +1,11 @@
+extern crate regex;
+
 use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
 use std::env;
+
+use regex::Regex;
 
 pub struct Config<'a> {
     pub search: &'a str,
@@ -34,29 +38,31 @@ impl<'a> Config<'a> {
     }
 }
 
-fn grep<'a>(search: &str, contents: &'a str) -> Vec<&'a str> {
+fn grep<'a>(search: &str, contents: &'a str) -> Result<Vec<&'a str>, Box<Error>> {
     let mut results = Vec::new();
+    let re = Regex::new(search)?;
 
     for line in contents.lines() {
-        if line.contains(search) {
+        if re.is_match(line) {
             results.push(line);
         }
     }
 
-    results
+    Ok(results)
 }
 
-fn grep_case_insensitive<'a>(search: &str, contents: &'a str) -> Vec<&'a str> {
-    let search = search.to_lowercase();
+fn grep_case_insensitive<'a>(search: &str, contents: &'a str) -> Result<Vec<&'a str>, Box<Error>> {
+    let search = &search.to_lowercase();
     let mut results = Vec::new();
+    let re = Regex::new(search)?;
 
     for line in contents.lines() {
-        if line.to_lowercase().contains(&search) {
+        if re.is_match(&line.to_lowercase()) {
             results.push(line);
         }
     }
 
-    results
+    Ok(results)
 }
 
 pub fn run(config: Config) -> Result<(), Box<Error>> {
@@ -66,9 +72,9 @@ pub fn run(config: Config) -> Result<(), Box<Error>> {
     f.read_to_string(&mut contents)?;
 
     let results = if config.case_sensitive {
-        grep(&config.search, &contents)
+        grep(&config.search, &contents)?
     } else {
-        grep_case_insensitive(&config.search, &contents)
+        grep_case_insensitive(&config.search, &contents)?
     };
 
     for line in results {
