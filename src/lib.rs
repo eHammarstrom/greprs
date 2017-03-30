@@ -98,7 +98,7 @@ Pick three.";
         
         assert_eq!(
             vec!["safe, fast, productive."],
-            grep(search, contents)
+            grep(search, contents).unwrap()
         );
     }
 
@@ -113,7 +113,7 @@ Trust me.";
 
         assert_eq!(
             vec!["Rust:", "Trust me."],
-            grep_case_insensitive(search, contents)
+            grep_case_insensitive(search, contents).unwrap()
         );
     }
 }
